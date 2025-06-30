@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invisible Inquiry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        .aspect-ratio-16-9 {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 1080/1920 = 0.5625 */
+        }
+        .aspect-ratio-16-9 img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+        .tabs-container {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+            overflow: hidden;
+            padding: 0.5rem 0; /* 2px padding */
+        }
+        [data-theme="dark"] .tabs-container {
+            background: #0d0d0d; /* 5% white */
+        }
+        .tabs-scroll {
+            display: flex;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .tabs-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .tab {
+            flex: 0 0 auto;
+            padding: 0.5rem 1rem; /* 2px vertical padding */
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            color: #4b5563;
+        }
+        [data-theme="dark"] .tab {
+            color: #e6e6e6; /* 90% white */
+        }
+        .tab.active {
+            border-bottom: 2px solid #2563eb;
+            font-weight: bold;
+        }
+        .tab:hover {
+            background-color: #f3f4f6;
+        }
+        [data-theme="dark"] .tab:hover {
+            background-color: #1a1a1a; /* ~10% white */
+        }
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 0.5rem; /* 2px padding */
+            cursor: pointer;
+        }
+        [data-theme="dark"] .nav-button {
+            background: rgba(13, 13, 13, 0.8); /* 5% white */
+            color: #e6e6e6; /* 90% white */
+        }
+        .nav-button.left {
+            left: 0;
+        }
+        .nav-button.right {
+            right: 0;
+        }
+        [data-theme="dark"] {
+            background-color: #1f1f1f; /* Dark grey (~12% white) */
+            color: #e6e6e6; /* 90% white */
+        }
+        [data-theme="dark"] .bg-white {
+            background-color: #0d0d0d; /* 5% white */
+        }
+        [data-theme="dark"] .bg-gray-100 {
+            background-color: #1f1f1f; /* Dark grey for body */
+        }
+        [data-theme="dark"] .text-gray-600 {
+            color: #e6e6e6; /* 90% white */
+        }
+        [data-theme="dark"] .text-gray-500 {
+            color: #e6e6e6; /* 90% white */
+        }
+        [data-theme="dark"] .text-blue-600 {
+            color: #87ceeb; /* Light baby blue */
+        }
+        [data-theme="dark"] .hover\:text-blue-600:hover {
+            color: #87ceeb; /* Light baby blue */
+        }
+        [data-theme="dark"] .hover\:text-yellow-400:hover {
+            color: #facc15;
+        }
+        [data-theme="dark"] #theme-toggle {
+            background-color: #1a1a1a; /* ~10% white */
+            color: #e6e6e6; /* 90% white */
+        }
+        [data-theme="dark"] #theme-toggle:hover {
+            background-color: #262626; /* ~15% white */
+        }
+        [data-theme="dark"] #time-filter, [data-theme="dark"] #keyword-filter {
+            background-color: #1a1a1a; /* ~10% white */
+            color: #e6e6e6; /* 90% white */
+            border-color: #262626; /* ~15% white */
+        }
+        #header-logo {
+            height: 1.35rem; /* 16px * 1.35 = 21.6px */
+            object-fit: contain;
+        }
+        [data-theme="dark"] #header-logo {
+            content: url('https://yufutdymwoiswkszlvtt.supabase.co/storage/v1/object/sign/images/logos/ii%20-%20Logo_Name_W.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mNTljZGE3My01YTUyLTRjMzgtOTliOS1kZjRhNTBkNTIxMjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZXMvbG9nb3MvaWkgLSBMb2dvX05hbWVfVy5wbmciLCJpYXQiOjE3NTEzMTc2MTgsImV4cCI6MTc4Mjg1MzYxOH0.PsZZAbLnUYPlnGqh9EHGrnzqMSIokJrX8v9X_4i6Hvo');
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-0.5"> <!-- 2px padding -->
+        <div class="flex justify-between items-center mb-0.5"> <!-- 2px margin-bottom -->
+            <img id="header-logo" src="https://yufutdymwoiswkszlvtt.supabase.co/storage/v1/object/sign/images/logos/ii%20-%20Logo_Name_B.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mNTljZGE3My01YTUyLTRjMzgtOTliOS1kZjRhNTBkNTIxMjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZXMvbG9nb3MvaWkgLSBMb2dvX05hbWVfQi5wbmciLCJpYXQiOjE3NTEzMTc1MzMsImV4cCI6MTc4Mjg1MzUzM30.VlVLoIXMzT7vbt1Ta9HK9-6V-4GOLvv9sKV5JNXRO34" alt="Invisible Inquiry Logo" class="h-[1.35rem]">
+            <div class="flex items-center space-x-0.5"> <!-- 2px spacing -->
+                <button id="theme-toggle" class="px-0.5 py-0.5 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500">Dark</button>
+                <select id="time-filter" class="p-0.5 border rounded bg-white text-gray-800 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+                    <option value="all">All</option>
+                    <option value="24h">Last 24 Hours</option>
+                    <option value="3d">Last 3 Days</option>
+                    <option value="7d">Last Week</option>
+                    <option value="30d">Last Month</option>
+                </select>
+                <select id="keyword-filter" class="p-0.5 border rounded bg-white text-gray-800 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+                    <option value="all">All Keywords</option>
+                    <!-- Keywords populated dynamically -->
+                </select>
+            </div>
+        </div>
+        <div class="tabs-container relative">
+            <button class="nav-button left hidden" onclick="scrollTabs(-100)">◀</button>
+            <div class="tabs-scroll" id="tabs">
+                <!-- Tabs will be populated dynamically -->
+            </div>
+            <button class="nav-button right hidden" onclick="scrollTabs(100)">▶</button>
+        </div>
+        <div id="posts-container" class="space-y-0.5 mt-0.5"> <!-- 2px spacing and margin-top -->
+            <!-- Posts will be populated dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // Google Sheets API configuration
+        const API_KEY = 'AIzaSyDEzsqFejezcPjPKPLicnGpJ-4-0l_6eHM';
+        const SPREADSHEET_ID = '1sG6wPxM3Z30IOngLKQQ7BSEy7il8apqSh0a1rL2jsFs';
+        let currentSheet = 'Advanced Weapons';
+        let allRows = [];
+
+        // Load Google API client
+        function loadClient() {
+            console.log('Loading Google API client...');
+            gapi.load('client', initClient);
+        }
+
+        function initClient() {
+            console.log('Initializing Google API client...');
+            gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+            }).then(() => {
+                console.log('Google API client initialized');
+                fetchSheetNames();
+                fetchSheetData(currentSheet);
+            }).catch(error => {
+                console.error('Error initializing Google API client:', error);
+                document.getElementById('posts-container').innerHTML = '<p class="text-red-500">Failed to initialize API client: ' + error.message + '</p>';
+            });
+        }
+
+        // Fetch all sheet names
+        async function fetchSheetNames() {
+            try {
+                console.log('Fetching sheet names...');
+                const response = await gapi.client.sheets.spreadsheets.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                });
+                const sheets = response.result.sheets.map(sheet => sheet.properties.title);
+                console.log('Sheet names:', sheets);
+                displayTabs(sheets);
+            } catch (error) {
+                console.error('Error fetching sheet names:', error);
+                document.getElementById('posts-container').innerHTML = '<p class="text-red-500">Failed to load sheet names: ' + error.message + '</p>';
+            }
+        }
+
+        // Display tabs for each sheet
+        function displayTabs(sheets) {
+            const tabsContainer = document.getElementById('tabs');
+            tabsContainer.innerHTML = '';
+            sheets.forEach(sheet => {
+                const tab = document.createElement('div');
+                tab.className = `tab ${sheet === currentSheet ? 'active' : ''}`;
+                tab.textContent = sheet;
+                tab.onclick = () => switchSheet(sheet);
+                tabsContainer.appendChild(tab);
+            });
+
+            // Show navigation buttons if tabs overflow
+            const leftButton = document.querySelector('.nav-button.left');
+            const rightButton = document.querySelector('.nav-button.right');
+            if (tabsContainer.scrollWidth > tabsContainer.clientWidth) {
+                leftButton.classList.remove('hidden');
+                rightButton.classList.remove('hidden');
+            }
+        }
+
+        // Scroll tabs left or right
+        function scrollTabs(amount) {
+            const tabsContainer = document.getElementById('tabs');
+            tabsContainer.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        // Switch to a different sheet
+        async function switchSheet(sheetName) {
+            currentSheet = sheetName;
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent === sheetName);
+            });
+            document.getElementById('posts-container').innerHTML = '';
+            await fetchSheetData(sheetName);
+        }
+
+        // Populate keyword dropdown
+        function populateKeywordFilter() {
+            const keywordFilter = document.getElementById('keyword-filter');
+            // Clear existing options except "All Keywords"
+            keywordFilter.innerHTML = '<option value="all">All Keywords</option>';
+            // Get unique keywords from rows (skip header)
+            const keywords = [...new Set(allRows.slice(1).map(row => row[2]).filter(keyword => keyword && keyword.trim()))];
+            console.log('Unique keywords:', keywords);
+            keywords.forEach(keyword => {
+                const option = document.createElement('option');
+                option.value = keyword;
+                option.textContent = keyword;
+                keywordFilter.appendChild(option);
+            });
+        }
+
+        // Fetch data from Google Sheet
+        async function fetchSheetData(sheetName) {
+            try {
+                console.log(`Fetching data from ${sheetName}...`);
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `${sheetName}!A:N`,
+                });
+                allRows = response.result.values || [];
+                console.log('Fetched rows:', allRows);
+                populateKeywordFilter();
+                applyTimeFilter();
+            } catch (error) {
+                console.error('Error fetching sheet data:', error);
+                document.getElementById('posts-container').innerHTML = '<p class="text-red-500">Failed to load posts: ' + error.message + '</p>';
+            }
+        }
+
+        // Apply time and keyword filters to posts
+        function applyTimeFilter() {
+            const timeFilter = document.getElementById('time-filter').value;
+            const keywordFilter = document.getElementById('keyword-filter').value;
+            // Current date: June 30, 2025, 05:10 PM EDT
+            const now = new Date('2025-06-30T17:10:00-04:00');
+            console.log('Current date for filtering:', now.toISOString());
+            const timeRanges = {
+                '24h': 24 * 60 * 60 * 1000, // 24 hours in ms
+                '3d': 3 * 24 * 60 * 60 * 1000, // 3 days
+                '7d': 7 * 24 * 60 * 60 * 1000, // 7 days
+                '30d': 30 * 24 * 60 * 60 * 1000, // 30 days
+            };
+            const filteredRows = timeFilter === 'all' && keywordFilter === 'all' 
+                ? allRows.slice(1) 
+                : allRows.slice(1).filter(row => {
+                    // Date filter
+                    const publishedAt = row[10]; // publishedAt is 11th column (index 10)
+                    let datePass = true;
+                    if (timeFilter !== 'all') {
+                        if (!publishedAt) {
+                            console.warn('No publishedAt for row:', row);
+                            return false;
+                        }
+                        let date = new Date(publishedAt);
+                        if (isNaN(date)) {
+                            date = new Date(publishedAt + 'T00:00:00-04:00'); // Assume EDT
+                        }
+                        if (isNaN(date)) {
+                            console.warn('Invalid date format for publishedAt:', publishedAt, 'Row:', row);
+                            return false;
+                        }
+                        const timeDiff = now - date;
+                        datePass = timeDiff >= 0 && timeDiff <= timeRanges[timeFilter];
+                        console.log(`Row: ${row[3] || 'No Title'}, publishedAt: ${publishedAt}, Parsed: ${date.toISOString()}, TimeDiff: ${timeDiff / (1000 * 60 * 60)} hours`);
+                    }
+                    // Keyword filter
+                    const keyword = row[2]; // keyword is 3rd column (index 2)
+                    const keywordPass = keywordFilter === 'all' || keyword === keywordFilter;
+                    return datePass && keywordPass;
+                });
+            console.log(`Time filter: ${timeFilter}, Keyword filter: ${keywordFilter}, Filtered rows count: ${filteredRows.length}`);
+            displayPosts(filteredRows.length > 0 ? [allRows[0], ...filteredRows] : allRows);
+        }
+
+        // Display posts in Reddit-like format
+        function displayPosts(rows) {
+            console.log('Displaying posts...');
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+            if (!rows || rows.length <= 1) {
+                console.warn('No data rows found or only header row exists');
+                container.innerHTML = '<p>No posts available.</p>';
+                return;
+            }
+            rows.slice(1).forEach(row => {
+                console.log('Processing row:', row);
+                const [select, class_, keyword, title, description, content, sourceName, author, url, urlToImage, publishedAt, articleText, topic] = row;
+                const postDiv = document.createElement('div');
+                postDiv.className = 'bg-white p-0.5 rounded-lg';
+                postDiv.innerHTML = `
+                    <a href="${url || '#'}" target="_blank" class="text-xl font-semibold text-blue-600 hover:underline">${title || 'No Title'}</a>
+                    <p class="text-gray-600 mt-0.5">${description || 'No Description'}</p>
+                    <p class="text-gray-500 text-sm mt-0.5"><span class="font-bold">${publishedAt ? new Date(publishedAt).toLocaleDateString() : 'No Date'}</span></p>
+                    ${urlToImage ? `<div class="aspect-ratio-16-9 mt-0.5"><img src="${urlToImage}" alt="Post Image"></div>` : ''}
+                    <div class="flex justify-between items-center mt-0.5 text-sm text-gray-500">
+                        <span>Topic: <span class="font-bold">${topic || 'N/A'}</span></span>
+                        <span>Keyword: <span class="font-bold">${keyword || 'N/A'}</span></span>
+                        <div class="flex space-x-1">
+                            <button class="thumbs-up text-gray-600 hover:text-blue-600" data-id="${title || 'unknown'}">
+                                <svg class="w-[30px] h-[30px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            </button>
+                            <button class="star text-gray-600 hover:text-yellow-400" data-id="${title || 'unknown'}">
+                                <svg class="w-[30px] h-[30px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.97a1 1 0 00.95 .69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.97c.3 .921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.784 .57-1.838-.197-1.54-1.118l1.287-3.97a1 1 0 00-.364-1.118L2.098 9.397c-.784-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.97z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(postDiv);
+            });
+
+            // Add event listeners for buttons
+            document.querySelectorAll('.thumbs-up').forEach(button => {
+                button.addEventListener('click', () => {
+                    button.classList.toggle('text-blue-600');
+                    button.classList.toggle('text-gray-600');
+                });
+            });
+
+            document.querySelectorAll('.star').forEach(button => {
+                button.addEventListener('click', () => {
+                    button.classList.toggle('text-yellow-400');
+                    button.classList.toggle('text-gray-600');
+                });
+            });
+        }
+
+        // Toggle dark/light mode
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
+            document.getElementById('theme-toggle').textContent = currentTheme === 'light' ? 'Light' : 'Dark';
+            const logo = document.getElementById('header-logo');
+            logo.src = currentTheme === 'light' 
+                ? 'https://yufutdymwoiswkszlvtt.supabase.co/storage/v1/object/sign/images/logos/ii%20-%20Logo_Name_W.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mNTljZGE3My01YTUyLTRjMzgtOTliOS1kZjRhNTBkNTIxMjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZXMvbG9nb3MvaWkgLSBMb2dvX05hbWVfVy5wbmciLCJpYXQiOjE3NTEzMTc2MTgsImV4cCI6MTc4Mjg1MzYxOH0.PsZZAbLnUYPlnGqh9EHGrnzqMSIokJrX8v9X_4i6Hvo' 
+                : 'https://yufutdymwoiswkszlvtt.supabase.co/storage/v1/object/sign/images/logos/ii%20-%20Logo_Name_B.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mNTljZGE3My01YTUyLTRjMzgtOTliOS1kZjRhNTBkNTIxMjIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZXMvbG9nb3MvaWkgLSBMb2dvX05hbWVfQi5wbmciLCJpYXQiOjE3NTEzMTc1MzMsImV4cCI6MTc4Mjg1MzUzM30.VlVLoIXMzT7vbt1Ta9HK9-6V-4GOLvv9sKV5JNXRO34';
+            applyTimeFilter();
+        });
+
+        // Apply filter on change
+        document.getElementById('time-filter').addEventListener('change', applyTimeFilter);
+        document.getElementById('keyword-filter').addEventListener('change', applyTimeFilter);
+
+        // Initialize Google API client
+        loadClient();
+    </script>
+</body>
+</html>
